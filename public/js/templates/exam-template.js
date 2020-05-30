@@ -1,5 +1,3 @@
-'use strict';
-
 function createExamTable() {
     return`<table class="table">
         <thead class="thead-light">

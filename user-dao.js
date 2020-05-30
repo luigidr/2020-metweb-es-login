@@ -1,50 +1,23 @@
+'use strict';
+
+const db = require('./db.js');
 const bcrypt = require('bcrypt');
-const sqlite = require('sqlite3');
 
-const db = new sqlite.Database('exams.db', (err) => {
-  if (err) throw err;
-});
-
-exports.getAllCourses = function(){
+exports.createUser = function(user) {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT * FROM course';
-    db.all(sql, (err, rows) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-
-      const courses = rows.map((e) => ({code: e.code, name: e.name, credits: e.CFU}));
-      resolve(courses);
-    });
-  });
-};
-
-exports.getAllExams = function(id) {
-  return new Promise((resolve, reject) => {
-    const sql = 'SELECT course_code, score, date, name, id, user_id FROM exam, course WHERE course_code=code AND user_id=?';
-
-    // execute the query and get all the results into 'rows'
-    db.all(sql, [id], (err, rows) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-
-      // transform 'rows' (query results) into an array of objects
-      const exams = rows.map((e) => (
-        {
-          code: e.course_code,
-          score: e.score,
-          date: e.date,
-          name: e.name,
-          id: e.id,
+    const sql = 'INSERT INTO user(email, password) VALUES (?, ?)';
+    // create the hash as an async call, given that the operation may be CPU-intensive (and we don't want to block the server)
+    bcrypt.hash(user.password, 10).then((hash => {
+      db.run(sql, [user.email, hash], function(err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(this.lastID);
         }
-      ));
-      resolve(exams);
-    });
+      });
+    }));
   });
-};
+}
 
 exports.getUserById = function(id) {
   return new Promise((resolve, reject) => {

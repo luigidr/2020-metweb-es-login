@@ -1,7 +1,10 @@
+'use strict';
+
 // imports
 const express = require('express');
 const morgan = require('morgan'); // logging middleware
-const dao = require('./dao.js');
+const userDao = require('./user-dao.js');
+const examDao = require('./exam-dao.js');
 const path = require('path');
 const passport = require('passport'); // auth middleware
 const LocalStrategy = require('passport-local').Strategy; // username and password for login
@@ -12,7 +15,7 @@ const session = require('express-session');
 // by setting a function to verify username and password
 passport.use(new LocalStrategy(
   function(username, password, done) {
-    dao.getUser(username, password).then(({user, check}) => {
+    userDao.getUser(username, password).then(({user, check}) => {
       if (!user) {
         return done(null, false, { message: 'Incorrect username.' });
       }
@@ -30,7 +33,7 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(id, done) {
-  dao.getUserById(id).then(user => {
+  userDao.getUserById(id).then(user => {
     done(null, user);
   });
 });
@@ -69,22 +72,37 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
-// === REST API (course, exam) === //
+// === REST API (course, exam, user, session) === //
 
 // GET /courses
 // Get all courses
-app.get('/api/courses', isLoggedIn, (req, res) => {
-  dao.getAllCourses()
+app.get('/api/courses',  isLoggedIn, (req, res) => {
+  examDao.getAllCourses()
   .then((courses) => res.json(courses))
-  .catch(() => res.status(500).end());
+  .catch((err) => {console.log(err); res.status(500).end();});
 });
 
 // GET /exams
 // Get all the exams
 app.get('/api/exams', isLoggedIn, (req, res) => {
-  dao.getAllExams(req.user.id)
+  examDao.getAllExams(req.user.id)
   .then((exams) => res.json(exams))
   .catch(() => res.status(500).end());
+});
+
+// POST /users
+// Sign up
+app.post('/api/users', /* [add here some validity checks], */ (req, res) => {
+  // create a user object from the signup form
+  // additional fields may be useful (name, role, etc.)
+  const user = {
+    email: req.body.email,
+    password: req.body.password,
+  };
+
+  userDao.createUser(user)
+  .then((result) => res.status(201).header('Location', `/users/${result}`).end())
+  .catch((err) => res.status(503).json({ error: 'Database error during the signup'}));
 });
 
 // POST /sessions 

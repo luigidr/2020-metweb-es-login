@@ -1,5 +1,3 @@
-'use strict';
-
 function createCourseTable() {
     return`<table class="table">
         <thead class="thead-light">

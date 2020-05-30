@@ -1,5 +1,3 @@
-'use strict';
-
 function createNavLinks(active) {
   return `<li class="nav-item ${active==='courses' ? 'active' : ''}">
     <a class="nav-link" href="/">Corsi ${active==='courses' ? '<span class="sr-only">(current)</span>' : ''}</a>

@@ -1,5 +1,3 @@
-'use strict';
-
 function createLoginForm() {
     return`<form method="POST" action="" id="login-form" class="col-6 mx-auto">            
     <div class="form-group">
